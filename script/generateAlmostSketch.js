@@ -12,7 +12,7 @@ const {
   ShapeGroup
 } = htmlSketchapp;
 
-const getAllLayers = (rootNode, symbolMastersByName = {}, symbolInstanceMiddleware = {}) => {
+const getAllLayers = (rootNode, symbolMastersByName = {}, symbolInstanceMiddleware = {}, symbolLayerMiddleware = () => {}) => {
   const rootNodeAndChildren = [rootNode, ...rootNode.querySelectorAll('*')];
 
   const symbolInstanceChildren = new Set([
@@ -41,8 +41,12 @@ const getAllLayers = (rootNode, symbolMastersByName = {}, symbolInstanceMiddlewa
       // otherwise it'll be included in the symbolInstance itself.
       return [];
     }
-
-    return nodeToSketchLayers(node);
+    return nodeToSketchLayers(node)
+      .filter(layer => layer !== null)
+      .map(layer => {
+        symbolLayerMiddleware({layer, SVG, Text, ShapeGroup, Rectangle, RESIZING_CONSTRAINTS, node});
+        return layer
+      })
   });
 
   return layers.reduce((prev, current) => prev.concat(current), []);
@@ -105,12 +109,10 @@ export function snapshotSymbols({ suffix = '', symbolLayerMiddleware = () => {},
     const name = node.dataset.sketchSymbol;
     const symbol = symbolMastersByName[name];
 
-    const layers = getAllLayers(node, symbolMastersByName, symbolInstanceMiddleware);
+    const layers = getAllLayers(node, symbolMastersByName, symbolInstanceMiddleware, symbolLayerMiddleware);
 
     layers
-      .filter(layer => layer !== null)
       .forEach(layer => {
-        symbolLayerMiddleware({layer, SVG, Text, ShapeGroup, Rectangle, RESIZING_CONSTRAINTS});
         symbol.addLayer(layer);
       });
 
