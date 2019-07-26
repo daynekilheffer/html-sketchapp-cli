@@ -12,7 +12,9 @@ const {
   ShapeGroup
 } = htmlSketchapp;
 
-const getAllLayers = (rootNode, symbolMastersByName = {}, symbolInstanceMiddleware = {}) => {
+const noop = () => {}
+
+const getAllLayers = (rootNode, symbolMastersByName = {}, symbolInstanceMiddleware = noop) => {
   const rootNodeAndChildren = [rootNode, ...rootNode.querySelectorAll('*')];
 
   const symbolInstanceChildren = new Set([
@@ -86,7 +88,7 @@ export function setupSymbols({ name }) {
   page.setName(name);
 }
 
-export function snapshotSymbols({ suffix = '', symbolLayerMiddleware = () => {}, symbolMiddleware = () => {}, symbolInstanceMiddleware = () => {} },) {
+export function snapshotSymbols({ suffix = '', symbolLayerMiddleware = noop, symbolMiddleware = noop, symbolInstanceMiddleware = noop },) {
   const nodes = Array.from(document.querySelectorAll('[data-sketch-symbol]'));
 
   const symbolMastersByName = nodes.reduce((obj, node) => {
